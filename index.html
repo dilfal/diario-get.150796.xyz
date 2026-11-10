@@ -3872,5 +3872,8 @@ primo.addEventListener("click",function(){
 dopo.addEventListener("click",function(){try{localStorage.setItem(CH,String(Date.now()));}catch(e){} box.remove();});
 })();
 </script>
+<script>
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}
+</script>
 </body>
 </html>
