@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Diario GET">
-<meta name="theme-color" content="#F6F1EA">
+<meta name="theme-color" content="#F2F6F4">
 <title>Diario GET</title>
 <script>
 /* Ogni apertura parte dal tema automatico del telefono: chiaro o scuro scelti a mano valgono finché la pagina resta aperta */
@@ -18,30 +18,33 @@
 </script>
 <style>
 :root{
-  --bg:#F6F1EA; --surface:#FFFFFF; --surface2:#FBF8F3; --ink:#2B2A28; --muted:#5F5A52; --line:#DCD2C3;
-  --accent:#2F6F6A; --accent-ink:#FFFFFF;
-  --rose:#B5525B; --rose-bg:#F7E6E8;
-  --lav:#6A5A9C; --lav-bg:#ECE8F6;
-  --sand:#9A6E2E; --sand-bg:#F4EBDB;
-  --teal:#2F6F6A; --teal-bg:#E1EFEC;
-  --zero:#8A847B;
-  --shadow:0 1px 2px rgba(60,45,20,.06),0 4px 14px rgba(60,45,20,.06);
-  --r:14px;
+  color-scheme:light;
+  --bg:#F2F6F4; --surface:#FFFFFF; --surface2:#EDF3F1; --ink:#0F1F2E; --muted:#526372; --line:#D9E3E0;
+  --accent:#0B7A6B; --accent-ink:#FFFFFF;
+  --rose:#C2405A; --rose-bg:#FCE8EC;
+  --lav:#6355D8; --lav-bg:#ECEAFC;
+  --sand:#A2610C; --sand-bg:#FCEFD7;
+  --teal:#0B7A6B; --teal-bg:#DCF1EC;
+  --zero:#7D8D9B;
+  --shadow:0 1px 2px rgba(15,31,46,.05),0 8px 24px rgba(15,31,46,.06);
+  --r:18px;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#1B1A18; --surface:#262420; --surface2:#2D2B27; --ink:#EEE9E1; --muted:#A9A196; --line:#3A3732;
-    --accent:#6DB3AB; --accent-ink:#10201E;
-    --rose:#E08A92; --rose-bg:#3A2729; --lav:#A797D6; --lav-bg:#2E2A3D;
-    --sand:#D3A65E; --sand-bg:#372E20; --teal:#6DB3AB; --teal-bg:#1F3330; --zero:#9A948A;
+    color-scheme:dark;
+    --bg:#0A0F1A; --surface:#121927; --surface2:#1A2434; --ink:#E8EEF7; --muted:#9BA9BB; --line:#263246;
+    --accent:#5FD3BC; --accent-ink:#06221C;
+    --rose:#FF8FA3; --rose-bg:#3A1D27; --lav:#AFA3FF; --lav-bg:#272452;
+    --sand:#F0B65A; --sand-bg:#3A2D16; --teal:#5FD3BC; --teal-bg:#10302B; --zero:#7C8A9A;
     --shadow:none;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#1B1A18; --surface:#262420; --surface2:#2D2B27; --ink:#EEE9E1; --muted:#A9A196; --line:#3A3732;
-  --accent:#6DB3AB; --accent-ink:#10201E;
-  --rose:#E08A92; --rose-bg:#3A2729; --lav:#A797D6; --lav-bg:#2E2A3D;
-  --sand:#D3A65E; --sand-bg:#372E20; --teal:#6DB3AB; --teal-bg:#1F3330; --zero:#9A948A;
+  color-scheme:dark;
+  --bg:#0A0F1A; --surface:#121927; --surface2:#1A2434; --ink:#E8EEF7; --muted:#9BA9BB; --line:#263246;
+  --accent:#5FD3BC; --accent-ink:#06221C;
+  --rose:#FF8FA3; --rose-bg:#3A1D27; --lav:#AFA3FF; --lav-bg:#272452;
+  --sand:#F0B65A; --sand-bg:#3A2D16; --teal:#5FD3BC; --teal-bg:#10302B; --zero:#7C8A9A;
   --shadow:none;
 }
 *{box-sizing:border-box}
@@ -62,8 +65,9 @@ button,a,summary,[role=switch]{-webkit-tap-highlight-color:transparent;touch-act
 .top .wrap{display:flex;align-items:center;gap:8px;min-height:56px}
 .brand{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:20px;font-weight:600;letter-spacing:.2px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand small{display:block;font:12px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--muted);font-weight:400}
-.tbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:15px;text-decoration:none;color:inherit}
+.tbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;min-height:40px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:15px;text-decoration:none;color:inherit}
 .tbtn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.top .tbtn.primary{background:var(--surface);color:var(--ink);border-color:var(--line)}
 .tbtn svg{width:18px;height:18px}
 .tbtn[hidden]{display:none}
 .tbtn.icon{padding:0;width:40px;justify-content:center}
@@ -72,6 +76,8 @@ button,a,summary,[role=switch]{-webkit-tap-highlight-color:transparent;touch-act
 :root[data-theme="dark"] .tbtn.icon .moon{display:none}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tbtn.icon .sun{display:block}:root:not([data-theme="light"]) .tbtn.icon .moon{display:none}}
 @media (max-width:420px){.tbtn .lbl-long{display:none}.top .wrap{gap:6px}.brand{font-size:18px}}
+/* Telefono: in alto solo il titolo e il Menu; tema e PDF stanno nel Menu */
+@media (max-width:759px){#btnTheme,#btnPrint{display:none}#btnMenu{padding:0;width:44px;height:44px;justify-content:center}#btnMenu .lbl-long{display:none}.top .wrap:not(.views){min-height:54px}}
 /* Scorrendo verso il basso il titolo si riduce (classe "compact" sul body, messa dallo script) */
 .top .wrap:not(.views){transition:min-height .2s}
 .brand{transition:font-size .2s}
@@ -86,10 +92,11 @@ body.compact .brand small{opacity:0;max-height:0}
   .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);background:color-mix(in srgb,var(--surface) 97%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
     border-top:1px solid var(--line);padding:2px max(4px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(4px,env(safe-area-inset-left))}
   .tabbar button{flex:1 1 0;min-width:0;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 0 6px;min-height:54px;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.1px;cursor:pointer}
-  .tabbar i{display:grid;place-items:center;width:52px;height:28px;border-radius:999px;transition:background .2s}
+  .tabbar i{display:grid;place-items:center;width:58px;height:32px;border-radius:999px;transition:background .2s}
   .tabbar svg{width:22px;height:22px}
   .tabbar button[aria-current="page"]{color:var(--accent)}
   .tabbar button[aria-current="page"] i{background:var(--teal-bg)}
+  .tabbar button[aria-current="page"]{font-weight:700}
   .tabbar span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   body{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
   body .saved{bottom:calc(74px + env(safe-area-inset-bottom))}
@@ -123,10 +130,10 @@ details.setup[open]>summary .chev{transform:rotate(180deg)}
 details.setup>summary .sub{font-weight:400;color:var(--muted);font-size:14px}
 .field{margin:0 0 16px}
 .field>label,.field>.lab{display:block;font-weight:600;margin-bottom:6px;font-size:15px}
-input[type=text],input[type=tel],input[type=date],input[type=time],textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+input[type=text],input[type=tel],input[type=date],input[type=time],textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
 input[type=date],input[type=time]{min-height:44px;-webkit-appearance:none;appearance:none}
 textarea{min-height:110px;resize:vertical}
-input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+input:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
 .grid2{display:grid;grid-template-columns:1fr;gap:0 18px}
 @media (min-width:720px){.grid2{grid-template-columns:1fr 1fr}}
 .linkbtn{background:none;border:0;color:var(--accent);text-decoration:underline;cursor:pointer;padding:0;font-size:inherit}
@@ -158,10 +165,10 @@ input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 .wsec h2,.gsec h2{margin:18px 0 6px;font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:25px;font-weight:600;line-height:1.2}
 .code{display:inline-block;font:700 13px/1 system-ui,sans-serif;letter-spacing:.5px;color:var(--accent);background:var(--teal-bg);border-radius:6px;padding:4px 7px;margin-top:16px}
 .hint{color:var(--muted);font-size:15.5px;line-height:1.5;margin:0 0 14px}
-.tcard{display:block;width:100%;text-align:left;border:1px solid var(--line);border-left:5px solid var(--gc);background:var(--surface);border-radius:12px;padding:12px 14px;margin:0 0 10px;cursor:pointer;touch-action:manipulation}
+.tcard{display:block;width:100%;text-align:left;border:1px solid var(--line);box-shadow:inset 5px 0 0 var(--gc);background:var(--surface);border-radius:14px;padding:12px 14px;margin:0 0 10px;cursor:pointer;touch-action:manipulation}
 .tcard b{display:block;font-size:17px}
 .tcard span{display:block;color:var(--muted);font-size:14.5px;margin-top:3px;line-height:1.4}
-.tcard[aria-pressed="true"]{background:color-mix(in srgb,var(--gc) 13%,var(--surface));box-shadow:0 0 0 2px var(--gc) inset}
+.tcard[aria-pressed="true"]{background:color-mix(in srgb,var(--gc) 13%,var(--surface));box-shadow:inset 5px 0 0 var(--gc),0 0 0 2px var(--gc) inset}
 .c-rose{--gc:var(--rose)}.c-lav{--gc:var(--lav)}.c-sand{--gc:var(--sand)}.c-teal{--gc:var(--teal)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
 .chip{border:1px dashed var(--accent);color:var(--accent);background:transparent;border-radius:999px;padding:6px 12px;font-size:14.5px;cursor:pointer;min-height:38px}
@@ -243,12 +250,12 @@ textarea.s{min-height:70px}
 .sosbar .go{margin-left:auto;font-size:24px;color:var(--rose);flex:none}
 .ctiles{display:grid;gap:10px;margin:14px 0}
 @media (min-width:640px){.ctiles{grid-template-columns:1fr 1fr}}
-.ctile{display:block;text-align:left;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--gc,var(--line));border-radius:var(--r);box-shadow:var(--shadow);padding:13px 14px;color:inherit;text-decoration:none}
+.ctile{display:block;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:inset 5px 0 0 var(--gc,var(--line)),var(--shadow);padding:13px 14px 13px 18px;color:inherit;text-decoration:none}
 .ctile b{display:block;font-size:17px}
 .ctile .d{display:block;color:var(--muted);font-size:14.5px;margin-top:2px;line-height:1.4}
 .ctile .st{display:block;font-size:13px;color:var(--accent);font-weight:650;margin-top:6px}
 .cgh{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:21px;font-weight:600;margin:22px 0 2px}
-.fam{border-left:5px solid var(--gc)}
+.fam{box-shadow:inset 5px 0 0 var(--gc),var(--shadow)}
 .fam h3{margin:0 0 2px;font-size:17px}
 .srow{border-top:1px solid var(--line);padding:9px 0}
 .srow .st1,.sadd{display:flex;gap:8px;align-items:center}
@@ -312,7 +319,7 @@ details.more>summary{color:var(--accent)}
 details.more>summary::after,details.gbox>summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s;flex:none}
 details[open].more>summary::after,details[open].gbox>summary::after{transform:rotate(-135deg)}
 details.more>div,details.gbox>div{padding:0 14px 4px}
-details.gbox{border-left:4px solid var(--gc,var(--line))}
+details.gbox{box-shadow:inset 4px 0 0 var(--gc,var(--line))}
 details.gbox>summary small{display:block;font-weight:400;color:var(--muted);font-size:13.5px}
 .gbody{font-size:16.5px;line-height:1.55}
 .gbody p{margin:0 0 12px}
@@ -396,7 +403,7 @@ details.gbox>summary small{display:block;font-weight:400;color:var(--muted);font
 /* ===== Diary card (schermo) ===== */
 /* Card */
 #v-diary .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);margin:18px 0;overflow:hidden}
-#v-diary .card>h3{margin:0;padding:12px 16px;font-size:15px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);font-weight:650;border-bottom:1px solid var(--line);background:var(--surface2)}
+#v-diary .card>h3{margin:0;padding:14px 16px;font-size:16px;color:var(--ink);font-weight:650;border-bottom:1px solid var(--line);background:var(--surface)}
 #v-diary .pad{padding:14px 16px}
 
 #v-diary details.setup>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:10px;font-weight:650}
@@ -407,11 +414,11 @@ details.gbox>summary small{display:block;font-weight:400;color:var(--muted);font
 #v-diary .field{margin:0 0 16px}
 #v-diary .field>label,#v-diary .field>.lab{display:block;font-weight:600;margin-bottom:6px;font-size:15px}
 #v-diary .field .hint{color:var(--muted);font-size:13.5px;margin:-2px 0 8px}
-#v-diary input[type=text],#v-diary input[type=date],#v-diary textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+#v-diary input[type=text],#v-diary input[type=date],#v-diary textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
 #v-diary input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
 #v-diary textarea{min-height:76px;resize:vertical}
 #v-diary textarea.short{min-height:48px}
-#v-diary input:focus,#v-diary textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+#v-diary input:focus,#v-diary textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
 #v-diary .grid2{display:grid;grid-template-columns:1fr;gap:0 18px}
 @media (min-width:720px){#v-diary .grid2{grid-template-columns:1fr 1fr}}
 #v-diary .cond-list{display:grid;gap:8px}
@@ -422,7 +429,7 @@ details.gbox>summary small{display:block;font-weight:400;color:var(--muted);font
 #v-diary .chip:disabled{opacity:.35;cursor:default}
 
 /* Giorni */
-#v-diary .days{position:relative;display:flex;gap:6px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#v-diary .days{position:relative;display:flex;gap:6px;overflow-x:auto;padding:12px 2px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 #v-diary .days::-webkit-scrollbar{display:none}
 #v-diary .day{flex:1 0 64px;min-width:64px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 4px 6px;text-align:center;cursor:pointer;position:relative}
 #v-diary .day b{display:block;font-size:15px}
@@ -581,9 +588,9 @@ details.gbox>summary small{display:block;font-weight:400;color:var(--muted);font
 .page.dc .full .it b{font-family:"Times New Roman",Times,serif}
 .page.dc .full .cols{column-count:2;column-gap:8mm}
 /* Il mio andamento e le settimane passate. Colori dei grafici più saturi di quelli delle schede, verificati per daltonismo e contrasto */
-:root{--ch-ca:#C8404F;--ch-ce:#7B5BD6;--ch-cs:#1A9A7A;--ch-on:#FFFFFF}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ch-ca:#DC4E62;--ch-ce:#8A70EA;--ch-cs:#20A688;--ch-on:#10201E}}
-:root[data-theme="dark"]{--ch-ca:#DC4E62;--ch-ce:#8A70EA;--ch-cs:#20A688;--ch-on:#10201E}
+:root{--ch-ca:#C8404F;--ch-ce:#6F5BE0;--ch-cs:#13917A;--ch-on:#FFFFFF}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ch-ca:#FF7A90;--ch-ce:#9C8CFF;--ch-cs:#3CC4A6;--ch-on:#06221C}}
+:root[data-theme="dark"]{--ch-ca:#FF7A90;--ch-ce:#9C8CFF;--ch-cs:#3CC4A6;--ch-on:#06221C}
 .chart{position:relative;margin:10px 0 0}
 .chart h3{margin:0 0 2px;font-size:17px}
 .chart .fh{margin-bottom:10px}
@@ -648,10 +655,12 @@ details.more-n summary{cursor:pointer;color:var(--accent);font-size:14px;margin-
 
 /* avviso «nuovo indirizzo» / «hai già usato Diario GET?» (script in fondo alla pagina) */
 .avviso-nuovo{background:var(--surface2);border-bottom:1px solid var(--line)}
-.avviso-nuovo .wrap{padding-top:12px;padding-bottom:12px}
-.avviso-nuovo .avviso-titolo{margin:0;font-weight:700}
-.avviso-nuovo .avviso-testo{margin:4px 0 0;color:var(--muted);font-size:14px;line-height:1.45}
-.avviso-nuovo .avviso-azioni{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.avviso-nuovo .wrap{padding-top:10px;padding-bottom:10px}
+.avviso-nuovo .avviso-titolo{margin:0;font-weight:700;font-size:15.5px}
+.avviso-nuovo .avviso-testo{margin:3px 0 0;color:var(--muted);font-size:13.5px;line-height:1.4}
+.avviso-nuovo .avviso-azioni{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.avviso-nuovo .avviso-azioni .tbtn{min-height:40px;font-size:14.5px;padding:6px 14px}
+.avviso-nuovo .avviso-azioni .tbtn:last-child{background:none;border-color:transparent;color:var(--muted);text-decoration:underline}
 .avviso-nuovo a.tbtn{text-decoration:none;color:inherit}
 </style>
 </head>
@@ -1434,6 +1443,7 @@ document.getElementById("btnMenu").onclick=function(){
     '<button class="tbtn" id="m_new">↻ Nuova settimana</button>'+
     '<button class="tbtn" id="m_sto">↗ Il mio andamento e le settimane passate</button>'+
     '<button class="tbtn" id="m_help">? Come si usa</button>'+
+    (document.getElementById("btnPrint").hidden?'':'<button class="tbtn" id="m_pdf">⎙ Crea il PDF di questa sezione</button>')+
     '<div class="field" style="margin:6px 0 0"><div class="lab">Aspetto</div><div class="themeseg" id="themeSeg">'+
       '<button type="button" data-th="auto">Automatico</button><button type="button" data-th="light">Chiaro</button><button type="button" data-th="dark">Scuro</button></div></div>'+
     '<button class="tbtn" data-close>Chiudi</button></div>');
@@ -1441,6 +1451,8 @@ document.getElementById("btnMenu").onclick=function(){
   document.getElementById("m_new").onclick=newWeek;
   document.getElementById("m_sto").onclick=function(){closeModal();location.hash="#storia";};
   document.getElementById("m_help").onclick=showHelp;
+  var mpdf=document.getElementById("m_pdf");
+  if(mpdf)mpdf.onclick=function(){closeModal();setTimeout(function(){document.getElementById("btnPrint").click();},0);};
   syncThemeSeg();
   document.querySelectorAll("#themeSeg [data-th]").forEach(function(b){b.onclick=function(){setTheme(b.dataset.th);};});
 };
@@ -1461,7 +1473,7 @@ function showHelp(){
   '<h4>Nuova settimana e Il mio andamento</h4><ul><li><b>Menu → Nuova settimana</b> chiude la settimana: diary card, crisi e pianificazione passano tra le <b>settimane passate</b>, da rileggere, e la nuova settimana parte vuota.</li>'+
   '<li>In <b>Menu → Il mio andamento</b> vedi i grafici delle settimane, apri quelle passate e scegli per quanto tempo tenerle su questo dispositivo. I numeri restano sempre.</li>'+
   '<li>Nella Pianificazione, in <b>Com’è andata la volta scorsa?</b>, ritrovi la pianificazione della settimana prima.</li></ul>'+
-  '<h4>Prima della seduta o del gruppo</h4><ul><li><b>PDF</b> (in alto): crea il foglio della sezione che hai aperta, da stampare o salvare in PDF. Su iPhone, nella finestra di stampa allarga l’anteprima con due dita, poi <b>Condividi</b> e <b>Salva su File</b>. Se il foglio esce in verticale, imposta <b>Orizzontale</b>.</li>'+
+  '<h4>Prima della seduta o del gruppo</h4><ul><li><b>PDF</b> (su telefono in <b>Menu → Crea il PDF di questa sezione</b>, su computer in alto): crea il foglio della sezione che hai aperta, da stampare o salvare in PDF. Su iPhone, nella finestra di stampa allarga l’anteprima con due dita, poi <b>Condividi</b> e <b>Salva su File</b>. Se il foglio esce in verticale, imposta <b>Orizzontale</b>.</li>'+
   '<li><b>Menu → Esporta o carica i dati → Invia i dati</b>: crea un solo file con tutto (diary card, crisi, pianificazione, check-in, cassetta e settimane passate) da mandare al tutor. Fallo <b>ogni settimana, prima di «Nuova settimana»</b>.</li></ul>'+
   '<h4>Più dispositivi</h4><ul><li>Ogni dispositivo ha i suoi dati. Sul dispositivo dove hai compilato apri <b>Menu → Esporta o carica i dati → Invia i dati</b>, poi sull’altro <b>Carica i dati</b> e scegli quel file. Le schede vengono unite: per ogni casella resta la risposta più recente.</li>'+
   '<li>In alternativa puoi copiare un <b>codice</b> e incollarlo sull’altro dispositivo (per esempio mandandolo a te stessa su WhatsApp).</li>'+
