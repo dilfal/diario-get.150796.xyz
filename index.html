@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Diario GET">
-<meta name="theme-color" content="#F2F6F4">
+<meta name="theme-color" content="#F6F1EA">
 <title>Diario GET</title>
 <script>
 /* Ogni apertura parte dal tema automatico del telefono: chiaro o scuro scelti a mano valgono finché la pagina resta aperta */
@@ -18,33 +18,30 @@
 </script>
 <style>
 :root{
-  color-scheme:light;
-  --bg:#F2F6F4; --surface:#FFFFFF; --surface2:#EDF3F1; --ink:#0F1F2E; --muted:#526372; --line:#D9E3E0;
-  --accent:#0B7A6B; --accent-ink:#FFFFFF;
-  --rose:#C2405A; --rose-bg:#FCE8EC;
-  --lav:#6355D8; --lav-bg:#ECEAFC;
-  --sand:#A2610C; --sand-bg:#FCEFD7;
-  --teal:#0B7A6B; --teal-bg:#DCF1EC;
-  --zero:#7D8D9B;
-  --shadow:0 1px 2px rgba(15,31,46,.05),0 8px 24px rgba(15,31,46,.06);
+  --bg:#F6F1EA; --surface:#FFFFFF; --surface2:#FBF8F3; --ink:#2B2A28; --muted:#5F5A52; --line:#DCD2C3;
+  --accent:#2F6F6A; --accent-ink:#FFFFFF;
+  --rose:#B5525B; --rose-bg:#F7E6E8;
+  --lav:#6A5A9C; --lav-bg:#ECE8F6;
+  --sand:#9A6E2E; --sand-bg:#F4EBDB;
+  --teal:#2F6F6A; --teal-bg:#E1EFEC;
+  --zero:#8A847B;
+  --shadow:0 1px 2px rgba(60,45,20,.06),0 4px 14px rgba(60,45,20,.06);
   --r:18px;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    color-scheme:dark;
-    --bg:#0A0F1A; --surface:#121927; --surface2:#1A2434; --ink:#E8EEF7; --muted:#9BA9BB; --line:#263246;
-    --accent:#5FD3BC; --accent-ink:#06221C;
-    --rose:#FF8FA3; --rose-bg:#3A1D27; --lav:#AFA3FF; --lav-bg:#272452;
-    --sand:#F0B65A; --sand-bg:#3A2D16; --teal:#5FD3BC; --teal-bg:#10302B; --zero:#7C8A9A;
+    --bg:#1B1A18; --surface:#262420; --surface2:#2D2B27; --ink:#EEE9E1; --muted:#A9A196; --line:#3A3732;
+    --accent:#6DB3AB; --accent-ink:#10201E;
+    --rose:#E08A92; --rose-bg:#3A2729; --lav:#A797D6; --lav-bg:#2E2A3D;
+    --sand:#D3A65E; --sand-bg:#372E20; --teal:#6DB3AB; --teal-bg:#1F3330; --zero:#9A948A;
     --shadow:none;
   }
 }
 :root[data-theme="dark"]{
-  color-scheme:dark;
-  --bg:#0A0F1A; --surface:#121927; --surface2:#1A2434; --ink:#E8EEF7; --muted:#9BA9BB; --line:#263246;
-  --accent:#5FD3BC; --accent-ink:#06221C;
-  --rose:#FF8FA3; --rose-bg:#3A1D27; --lav:#AFA3FF; --lav-bg:#272452;
-  --sand:#F0B65A; --sand-bg:#3A2D16; --teal:#5FD3BC; --teal-bg:#10302B; --zero:#7C8A9A;
+  --bg:#1B1A18; --surface:#262420; --surface2:#2D2B27; --ink:#EEE9E1; --muted:#A9A196; --line:#3A3732;
+  --accent:#6DB3AB; --accent-ink:#10201E;
+  --rose:#E08A92; --rose-bg:#3A2729; --lav:#A797D6; --lav-bg:#2E2A3D;
+  --sand:#D3A65E; --sand-bg:#372E20; --teal:#6DB3AB; --teal-bg:#1F3330; --zero:#9A948A;
   --shadow:none;
 }
 *{box-sizing:border-box}
@@ -67,7 +64,6 @@ button,a,summary,[role=switch]{-webkit-tap-highlight-color:transparent;touch-act
 .brand small{display:block;font:12px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--muted);font-weight:400}
 .tbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;min-height:40px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:15px;text-decoration:none;color:inherit}
 .tbtn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
-.top .tbtn.primary{background:var(--surface);color:var(--ink);border-color:var(--line)}
 .tbtn svg{width:18px;height:18px}
 .tbtn[hidden]{display:none}
 .tbtn.icon{padding:0;width:40px;justify-content:center}
@@ -588,9 +584,9 @@ details.gbox>summary small{display:block;font-weight:400;color:var(--muted);font
 .page.dc .full .it b{font-family:"Times New Roman",Times,serif}
 .page.dc .full .cols{column-count:2;column-gap:8mm}
 /* Il mio andamento e le settimane passate. Colori dei grafici più saturi di quelli delle schede, verificati per daltonismo e contrasto */
-:root{--ch-ca:#C8404F;--ch-ce:#6F5BE0;--ch-cs:#13917A;--ch-on:#FFFFFF}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ch-ca:#FF7A90;--ch-ce:#9C8CFF;--ch-cs:#3CC4A6;--ch-on:#06221C}}
-:root[data-theme="dark"]{--ch-ca:#FF7A90;--ch-ce:#9C8CFF;--ch-cs:#3CC4A6;--ch-on:#06221C}
+:root{--ch-ca:#C8404F;--ch-ce:#7B5BD6;--ch-cs:#1A9A7A;--ch-on:#FFFFFF}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ch-ca:#DC4E62;--ch-ce:#8A70EA;--ch-cs:#20A688;--ch-on:#10201E}}
+:root[data-theme="dark"]{--ch-ca:#DC4E62;--ch-ce:#8A70EA;--ch-cs:#20A688;--ch-on:#10201E}
 .chart{position:relative;margin:10px 0 0}
 .chart h3{margin:0 0 2px;font-size:17px}
 .chart .fh{margin-bottom:10px}
