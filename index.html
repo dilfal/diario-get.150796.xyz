@@ -649,6 +649,9 @@ details.more-n summary{cursor:pointer;color:var(--accent);font-size:14px;margin-
   #print .page{margin:0;min-height:0}
 }
 
+.love{text-align:center;font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:16px;color:var(--muted);margin:18px 0 0}
+.love .heart{color:var(--sand)}
+
 /* avviso «nuovo indirizzo» / «hai già usato Diario GET?» (script in fondo alla pagina) */
 .avviso-nuovo{background:var(--surface2);border-bottom:1px solid var(--line)}
 .avviso-nuovo .wrap{padding-top:10px;padding-bottom:10px}
@@ -1442,7 +1445,8 @@ document.getElementById("btnMenu").onclick=function(){
     (document.getElementById("btnPrint").hidden?'':'<button class="tbtn" id="m_pdf">⎙ Crea il PDF di questa sezione</button>')+
     '<div class="field" style="margin:6px 0 0"><div class="lab">Aspetto</div><div class="themeseg" id="themeSeg">'+
       '<button type="button" data-th="auto">Automatico</button><button type="button" data-th="light">Chiaro</button><button type="button" data-th="dark">Scuro</button></div></div>'+
-    '<button class="tbtn" data-close>Chiudi</button></div>');
+    '<button class="tbtn" data-close>Chiudi</button></div>'+
+    '<p class="love">Made with love <span class="heart" aria-hidden="true">♥</span></p>');
   document.getElementById("m_tr").onclick=showTransfer;
   document.getElementById("m_new").onclick=newWeek;
   document.getElementById("m_sto").onclick=function(){closeModal();location.hash="#storia";};

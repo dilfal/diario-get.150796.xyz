@@ -1,7 +1,7 @@
 /* Service worker di Diario GET: la app si apre anche senza rete.
    Non tocca i dati del diario (stanno nel localStorage del telefono).
    Si cambia VERSIONE a ogni modifica dei file, così i telefoni scaricano la copia nuova. */
-var VERSIONE = 'diario-get-v1';
+var VERSIONE = 'diario-get-v2';
 var NUCLEO = ['./', 'index.html', 'manifest.webmanifest', 'icona-180.png', 'icona-192.png', 'icona-512.png'];
 
 self.addEventListener('install', function (e) {
