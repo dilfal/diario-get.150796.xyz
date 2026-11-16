@@ -651,6 +651,12 @@ details.more-n summary{cursor:pointer;color:var(--accent);font-size:14px;margin-
 
 .love{text-align:center;font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:16px;color:var(--muted);margin:18px 0 0}
 .love .heart{color:var(--sand)}
+.pmr{display:flex;align-items:center;gap:10px;margin:10px 0}
+.pmr label{flex:1;display:flex;align-items:center;gap:8px;cursor:pointer}
+.pmr label input{width:20px;height:20px;accent-color:var(--accent);flex:none}
+.pmr input[type=time]{width:132px;flex:none}
+.pmnote{color:var(--muted);font-size:14px;line-height:1.4;margin:14px 0 0}
+#pm_st{font-weight:600;color:var(--accent);min-height:1.4em;margin:14px 0 0}
 
 /* avviso «nuovo indirizzo» / «hai già usato Diario GET?» (script in fondo alla pagina) */
 .avviso-nuovo{background:var(--surface2);border-bottom:1px solid var(--line)}
@@ -700,7 +706,7 @@ details.more-n summary{cursor:pointer;color:var(--accent);font-size:14px;margin-
 <div class="wrap"><div id="warnStore" class="warn" hidden>Questo browser non riesce a salvare i dati (forse è attiva la navigazione privata). Prima di chiudere la pagina usa <b>Menu → Esporta o carica i dati</b>, altrimenti andranno persi.</div></div>
 
 <main class="wrap" id="v-diary" hidden>
-  <p class="privacy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Tutto si salva da solo su questo dispositivo. Nessun dato viene inviato su internet.</span></p>
+  <p class="privacy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Tutto si salva da solo su questo dispositivo. Solo se attivi i promemoria, un server conserva un indirizzo anonimo e gli orari scelti.</span></p>
 
   <details class="card setup" id="dcSetup">
     <summary>
@@ -775,7 +781,7 @@ details.more-n summary{cursor:pointer;color:var(--accent);font-size:14px;margin-
 
 <main class="wrap" id="v-crisi" hidden>
   <div class="col">
-    <p class="privacy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Tutto si salva da solo su questo dispositivo. Nessun dato viene inviato su internet.</span></p>
+    <p class="privacy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Tutto si salva da solo su questo dispositivo. Solo se attivi i promemoria, un server conserva un indirizzo anonimo e gli orari scelti.</span></p>
     <div id="cbox"></div>
   </div>
 </main>
@@ -1441,6 +1447,7 @@ document.getElementById("btnMenu").onclick=function(){
     '<button class="tbtn" id="m_tr">⇄ Esporta o carica i dati</button>'+
     '<button class="tbtn" id="m_new">↻ Nuova settimana</button>'+
     '<button class="tbtn" id="m_sto">↗ Il mio andamento e le settimane passate</button>'+
+    '<button class="tbtn" id="m_prom">◔ Promemoria</button>'+
     '<button class="tbtn" id="m_help">? Come si usa</button>'+
     (document.getElementById("btnPrint").hidden?'':'<button class="tbtn" id="m_pdf">⎙ Crea il PDF di questa sezione</button>')+
     '<div class="field" style="margin:6px 0 0"><div class="lab">Aspetto</div><div class="themeseg" id="themeSeg">'+
@@ -1450,6 +1457,7 @@ document.getElementById("btnMenu").onclick=function(){
   document.getElementById("m_tr").onclick=showTransfer;
   document.getElementById("m_new").onclick=newWeek;
   document.getElementById("m_sto").onclick=function(){closeModal();location.hash="#storia";};
+  document.getElementById("m_prom").onclick=function(){showPromemoria();};
   document.getElementById("m_help").onclick=showHelp;
   var mpdf=document.getElementById("m_pdf");
   if(mpdf)mpdf.onclick=function(){closeModal();setTimeout(function(){document.getElementById("btnPrint").click();},0);};
@@ -3831,6 +3839,123 @@ document.querySelectorAll(".views [data-view], .tabbar [data-view]").forEach(fun
   if(phone.addEventListener)phone.addEventListener("change",function(){if(!phone.matches)set(false);});
 })();
 
+/* Promemoria della diary card: una notifica push a due orari scelti.
+   Il server (promemoria.150796.xyz) conserva solo l'indirizzo anonimo di questo telefono e gli orari; il diario non lo tocca mai.
+   Le preferenze stanno in diarioget.promemoria e NON entrano in «Esporta o carica i dati» (exportJSON esporta solo i campi del diario):
+   l'iscrizione vale per un solo telefono. L'indirizzo (endpoint) non si salva: si rilegge da pushManager.getSubscription(). */
+var PMK="diarioget.promemoria", PMSRV="https://promemoria.150796.xyz";
+function pmOk(){return "serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;}
+function pmArrotonda(v,def){
+  var m=/^(\d{1,2}):(\d{2})/.exec(v||""); if(!m)return def;
+  var h=+m[1],mi=Math.round(+m[2]/5)*5; if(h>23||+m[2]>59)return def;
+  if(mi===60){mi=0;h=(h+1)%24;}
+  return (h<10?"0":"")+h+":"+(mi<10?"0":"")+mi;
+}
+function pmLeggi(){
+  var p={attivi:false,orari:{mattina:{on:true,ora:"13:00"},pomeriggio:{on:true,ora:"20:00"}},ultimoInvio:0}, o=null;
+  try{o=JSON.parse(localStorage.getItem(PMK));}catch(e){}
+  if(o&&typeof o==="object"){
+    p.attivi=o.attivi===true; p.ultimoInvio=+o.ultimoInvio||0;
+    ["mattina","pomeriggio"].forEach(function(k){var x=o.orari&&o.orari[k]; if(x){p.orari[k].on=x.on!==false; p.orari[k].ora=pmArrotonda(x.ora,p.orari[k].ora);}});
+  }
+  return p;
+}
+function pmSalva(p){try{localStorage.setItem(PMK,JSON.stringify(p));}catch(e){}}
+function pmOrari(p){var a=[];["mattina","pomeriggio"].forEach(function(k){if(p.orari[k].on)a.push(p.orari[k].ora);});return a.filter(function(x,i,r){return r.indexOf(x)===i;});}
+/* fetch verso il server dei promemoria con tempo massimo di 8 secondi, così i tasti non restano bloccati */
+function pmFetch(u,o){
+  var c=typeof AbortController==="function"?new AbortController():null, t=setTimeout(function(){if(c)c.abort();},8000);
+  o=o||{}; if(c)o.signal=c.signal;
+  return fetch(u,o).then(function(r){clearTimeout(t);return r;},function(e){clearTimeout(t);throw e;});
+}
+function pmReg(){
+  return Promise.race([navigator.serviceWorker.ready,new Promise(function(_,no){setTimeout(function(){no(new Error("sw"));},8000);})]);
+}
+function pmChiaveApp(t){
+  var pad="=".repeat((4-t.length%4)%4), b=(t+pad).replace(/-/g,"+").replace(/_/g,"/"), r=atob(b), u=new Uint8Array(r.length);
+  for(var i=0;i<r.length;i++)u[i]=r.charCodeAt(i); return u;
+}
+function pmInvia(sub,p){
+  return pmFetch(PMSRV+"/iscrizione",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({app:"diario",endpoint:sub.endpoint,orari:pmOrari(p),fuso:Intl.DateTimeFormat().resolvedOptions().timeZone})
+  }).then(function(r){if(!r.ok)throw new Error("srv");p.ultimoInvio=Date.now();pmSalva(p);});
+}
+function pmIscrivi(reg){
+  return pmFetch(PMSRV+"/chiave").then(function(r){if(!r.ok)throw new Error("srv");return r.text();}).then(function(t){
+    return reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:pmChiaveApp(t.trim())});
+  });
+}
+function showPromemoria(){
+  var p=pmLeggi();
+  var nota='<p class="pmnote">Per i promemoria, un server conserva solo un indirizzo anonimo di questo telefono e gli orari scelti. Il diario resta su questo dispositivo.</p>';
+  if(!pmOk()){
+    openModal('<h2>Promemoria</h2><p id="pm_nosup">Per ricevere i promemoria su iPhone, aggiungi prima Diario GET alla schermata Home (Condividi, poi «Aggiungi alla schermata Home») e aprilo da lì.</p>'+
+      nota+'<div class="acts"><button class="tbtn" data-close>Chiudi</button></div>');
+    return;
+  }
+  function riga(k,tit){var x=p.orari[k];
+    return '<div class="pmr"><label><input type="checkbox" id="pm_'+k+'_on"'+(x.on?' checked':'')+'> '+tit+'</label>'+
+      '<input type="time" step="300" id="pm_'+k+'_ora" aria-label="Ora: '+tit+'" value="'+x.ora+'"></div>';}
+  openModal('<h2>Promemoria</h2><p>Una notifica a un’ora che scegli, per ricordarti la diary card. Puoi cambiarla o spegnerla quando vuoi.</p>'+
+    riga("mattina","Dopo la mattina")+riga("pomeriggio","Dopo il pomeriggio")+
+    '<div class="acts"><button class="tbtn primary" id="pm_btn"></button></div>'+
+    '<p id="pm_st" role="status" aria-live="polite"></p>'+nota+
+    '<div class="acts"><button class="tbtn" data-close>Chiudi</button></div>');
+  var btn=document.getElementById("pm_btn"), st=document.getElementById("pm_st");
+  function aggiorna(msg){
+    btn.textContent=p.attivi?"Disattiva i promemoria":"Attiva i promemoria";
+    if(msg!==undefined)st.textContent=msg;
+    else if(p.attivi&&Notification.permission==="denied")st.textContent="Le notifiche sono bloccate nelle impostazioni del telefono.";
+    else st.textContent=p.attivi?(pmOrari(p).length?"I promemoria sono attivi.":"I promemoria sono attivi, ma nessun orario è acceso."):"I promemoria sono spenti.";
+  }
+  aggiorna();
+  function riinvia(){
+    pmSalva(p); if(!p.attivi)return;
+    pmReg().then(function(reg){return reg.pushManager.getSubscription();}).then(function(sub){if(!sub)throw new Error("sub");return pmInvia(sub,p);})
+      .then(function(){aggiorna("Orari aggiornati.");},function(){p.ultimoInvio=0;pmSalva(p);aggiorna("Non è stato possibile aggiornare gli orari. Riprova più tardi.");});
+  }
+  ["mattina","pomeriggio"].forEach(function(k){
+    var on=document.getElementById("pm_"+k+"_on"), ora=document.getElementById("pm_"+k+"_ora");
+    on.onchange=function(){p.orari[k].on=on.checked;riinvia();};
+    ora.onchange=function(){var v=pmArrotonda(ora.value,p.orari[k].ora);ora.value=v;p.orari[k].ora=v;riinvia();};
+  });
+  btn.onclick=function(){
+    if(p.attivi){
+      btn.disabled=true;
+      pmReg().then(function(reg){return reg.pushManager.getSubscription();}).then(function(sub){
+        if(!sub)return;
+        return pmFetch(PMSRV+"/iscrizione",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({endpoint:sub.endpoint})})
+          .then(function(r){if(!r.ok)throw new Error("srv");return sub.unsubscribe();});
+      }).then(function(){p.attivi=false;pmSalva(p);btn.disabled=false;aggiorna();},
+        function(){btn.disabled=false;aggiorna("Non è stato possibile disattivare i promemoria. Riprova più tardi.");});
+      return;
+    }
+    /* il permesso si chiede solo qui, dal tocco */
+    var rp; try{rp=Notification.requestPermission();}catch(e){rp=Promise.resolve("denied");}
+    btn.disabled=true; aggiorna("");
+    Promise.resolve(rp).then(function(perm){
+      if(perm!=="granted"){btn.disabled=false;aggiorna(perm==="default"?"Non hai scelto: puoi riprovare quando vuoi.":"Le notifiche sono bloccate nelle impostazioni del telefono.");return;}
+      return pmReg().then(function(reg){
+        return reg.pushManager.getSubscription().then(function(sub){return sub||pmIscrivi(reg);});
+      }).then(function(sub){return pmInvia(sub,p);}).then(function(){
+        p.attivi=true;pmSalva(p);btn.disabled=false;aggiorna();
+      },function(){btn.disabled=false;aggiorna("Non è stato possibile attivare i promemoria. Riprova più tardi.");});
+    });
+  };
+}
+/* All'avvio, in silenzio: se i promemoria sono attivi riscrive l'iscrizione mancante e rimanda gli orari al massimo una volta al giorno */
+(function(){
+  if(!pmOk())return;
+  var p=pmLeggi(); if(!p.attivi)return;
+  pmReg().then(function(reg){
+    return reg.pushManager.getSubscription().then(function(sub){
+      if(!sub&&Notification.permission==="granted")return pmIscrivi(reg).then(function(s){return pmInvia(s,p);});
+      if(sub&&Date.now()-p.ultimoInvio>864e5)return pmInvia(sub,p);
+    });
+  }).catch(function(){});
+  /* un tocco sulla notifica con l'app già aperta: il service worker chiede di andare alla diary card */
+  navigator.serviceWorker.addEventListener("message",function(e){if(e.data&&e.data.tipo==="diario-vai")location.hash="#diary";});
+})();
 /* ---------- Avvio ---------- */
 S=load();
 try{localStorage.setItem(SK+".test","1");localStorage.removeItem(SK+".test");}catch(e){storeOK=false;document.getElementById("warnStore").hidden=false;}
