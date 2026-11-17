@@ -641,6 +641,8 @@ details.more-n summary{cursor:pointer;color:var(--accent);font-size:14px;margin-
 .prevpian{border-top:1px solid var(--line);margin-top:12px;padding-top:4px}
 .page+.page{break-before:page;page-break-before:always}
 .page *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#pdfBox{position:fixed;left:-10000px;top:0;width:281mm;background:#fff}
+#pdfBox .page{margin:0;min-height:0}
 @page{size:A4 landscape;margin:8mm}
 @media print{
   html,body{background:#fff!important;padding:0!important;margin:0!important}
@@ -1957,8 +1959,73 @@ function openPrint(){
     '<div class="acts" style="margin:0 0 12px"><button class="tbtn primary" id="p_go">Stampa o salva PDF</button><button class="tbtn" data-close>Chiudi</button></div>'+
     '<div class="prev-scroll" id="prevBox">'+html+'</div>',true);
   fitPreview();
-  document.getElementById("p_go").onclick=function(){closeModal();setTimeout(function(){window.print();},250);};
+  document.getElementById("p_go").onclick=function(){
+    if(isIosApp()){savePdf(html);return;}
+    closeModal();setTimeout(function(){window.print();},250);
+  };
   sheet.querySelectorAll("[data-pc]").forEach(function(b){b.onclick=function(){colorPrint=b.dataset.pc==="1";try{localStorage.setItem(PK,colorPrint?"1":"0");}catch(e){}openPrint();};});
+}
+/* iPhone con l'app sulla schermata Home: window.print() non fa nulla, quindi si crea un PDF (librerie caricate solo al bisogno) e lo si passa al menu Condividi */
+function isIosApp(){
+  if(navigator.standalone===true)return true;
+  var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  try{return ios&&window.matchMedia("(display-mode: standalone)").matches;}catch(e){return false;}
+}
+function loadScript(src){return new Promise(function(ok,ko){var s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=function(){ko(new Error("Non riesco a caricare le librerie del PDF. Riprova con la rete attiva."));};document.head.appendChild(s);});}
+function loadPdfLibs(){
+  if(window.html2canvas&&window.jspdf)return Promise.resolve();
+  return loadScript("vendor/html2canvas.min.js").then(function(){return loadScript("vendor/jspdf.umd.min.js");});
+}
+function pdfName(){var d=new Date(),v=curView==="storia"&&cur.w?"storia-"+(cur.w.id||""):curView;return "diario-get-"+String(v).replace(/[^\w-]+/g,"-")+"-"+fmtISO(d)+"-"+String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0")+".pdf";}
+/* Ogni .page diventa un'immagine (foglio A4 a grandezza reale, scala 2) e una pagina A4 orizzontale con margine di 8 mm, come la stampa vera */
+function makePdf(html){
+  var box=document.createElement("div");box.id="pdfBox";box.innerHTML=html;document.body.appendChild(box);
+  var pages=[].slice.call(box.querySelectorAll(".page")),doc=null,i=0;
+  function next(){
+    if(i>=pages.length)return Promise.resolve();
+    return html2canvas(pages[i],{scale:2,backgroundColor:"#ffffff",logging:false}).then(function(cv){
+      var w=281,h=w*cv.height/cv.width; if(h>194){w=w*194/h;h=194;}
+      if(!doc)doc=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});else doc.addPage("a4","landscape");
+      doc.addImage(cv.toDataURL("image/jpeg",0.92),"JPEG",8,8,w,h);
+      cv.width=cv.height=0;i++;
+      return new Promise(function(r){setTimeout(r,30);}).then(next);
+    });
+  }
+  return loadPdfLibs().then(function(){
+    if(!pages.length)throw new Error("Non c’è nulla da stampare in questa vista.");
+    return next();
+  }).then(function(){box.remove();return doc.output("blob");},function(e){box.remove();throw e;});
+}
+function sharePdf(blob,name,msg){
+  var file=null; try{file=new File([blob],name,{type:"application/pdf"});}catch(e){}
+  function dl(){
+    var url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},4000);
+    msg("Il file "+name+" è nei download.");
+  }
+  if(file&&navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){
+    navigator.share({files:[file],title:"Diario GET"}).catch(function(e){if(e&&e.name!=="AbortError")dl();});
+  }else dl();
+}
+function savePdf(html){
+  var go=document.getElementById("p_go"),acts=go.parentNode,note=document.createElement("p");
+  note.setAttribute("role","status");note.style.cssText="margin:-4px 0 12px;font-size:13px;color:var(--muted)";
+  acts.parentNode.insertBefore(note,acts.nextSibling);
+  function msg(t){note.textContent=t;}
+  function alive(){return document.body.contains(go);}
+  go.disabled=true;go.textContent="Preparo il PDF…";msg("Ci vuole qualche secondo: non chiudere questa finestra.");
+  var name=pdfName();
+  makePdf(html).then(function(blob){
+    if(!alive())return;
+    go.disabled=false;go.textContent="Salva o condividi il PDF";
+    msg("Dal menu che si apre puoi scegliere “Salva in File” oppure “Stampa”.");
+    go.onclick=function(){sharePdf(blob,name,msg);};
+  }).catch(function(e){
+    if(!alive())return;
+    go.disabled=false;go.textContent="Riprova";
+    msg("Non sono riuscita a preparare il PDF: "+((e&&e.message)||"errore sconosciuto")+" Riprova.");
+    go.onclick=function(){note.remove();savePdf(html);};
+  });
 }
 function fitPreview(){
   var box=document.getElementById("prevBox"); if(!box)return;
