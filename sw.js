@@ -1,7 +1,7 @@
 /* Service worker di Diario GET: la app si apre anche senza rete.
    Non tocca i dati del diario (stanno nel localStorage del telefono).
    Si cambia VERSIONE a ogni modifica dei file, così i telefoni scaricano la copia nuova. */
-var VERSIONE = 'diario-get-v4';
+var VERSIONE = 'diario-get-v5';
 var NUCLEO = ['./', 'index.html', 'manifest.webmanifest', 'icona-180.png', 'icona-192.png', 'icona-512.png', 'vendor/html2canvas.min.js', 'vendor/jspdf.umd.min.js'];
 
 self.addEventListener('install', function (e) {
@@ -31,9 +31,11 @@ self.addEventListener('fetch', function (e) {
 
 /* Promemoria: la push arriva senza contenuto, il testo lo sceglie questo file dall'ora locale del telefono. */
 self.addEventListener('push', function (e) {
-  var testo = new Date().getHours() < 16 ? 'Diary card: com’è andata la mattina?' : 'Diary card: com’è andato il pomeriggio?';
+  var mattina = new Date().getHours() < 16;
+  var testo = mattina ? 'Diary card: com’è andata la mattina?' : 'Diary card: com’è andato il pomeriggio?';
+  /* un'etichetta per momento: la notifica delle 20 non sostituisce in silenzio quella delle 13 (iOS non rinnova l'avviso) */
   e.waitUntil(self.registration.showNotification('Diario GET', {
-    body: testo, icon: 'icona-192.png', badge: 'icona-192.png', tag: 'diario-card', data: { url: './#diary' }
+    body: testo, icon: 'icona-192.png', badge: 'icona-192.png', tag: mattina ? 'diario-mattina' : 'diario-pomeriggio', renotify: true, data: { url: './#diary' }
   }));
 });
 
