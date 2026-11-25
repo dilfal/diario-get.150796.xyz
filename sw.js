@@ -1,7 +1,7 @@
 /* Service worker di Diario GET: la app si apre anche senza rete.
    Non tocca i dati del diario (stanno nel localStorage del telefono).
    Si cambia VERSIONE a ogni modifica dei file, così i telefoni scaricano la copia nuova. */
-var VERSIONE = 'diario-get-v6';
+var VERSIONE = 'diario-get-v7';
 var NUCLEO = ['./', 'index.html', 'manifest.webmanifest', 'icona-180.png', 'icona-192.png', 'icona-512.png', 'vendor/html2canvas.min.js', 'vendor/jspdf.umd.min.js'];
 
 self.addEventListener('install', function (e) {
@@ -29,13 +29,18 @@ self.addEventListener('fetch', function (e) {
   }));
 });
 
+function dataLocale() {
+  var d = new Date(), m = d.getMonth() + 1, g = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (g < 10 ? '0' : '') + g;
+}
+
 /* Promemoria: la push arriva senza contenuto, il testo lo sceglie questo file dall'ora locale del telefono. */
 self.addEventListener('push', function (e) {
   var mattina = new Date().getHours() < 16;
   var testo = mattina ? 'Diary card: com’è andata la mattina?' : 'Diary card: com’è andato il pomeriggio?';
-  /* un'etichetta per momento: la notifica delle 20 non sostituisce in silenzio quella delle 13 (iOS non rinnova l'avviso) */
+  /* un'etichetta per giorno e momento: iOS ignora renotify e un'etichetta ripetuta sostituisce in silenzio quella del giorno prima */
   e.waitUntil(self.registration.showNotification('Diario GET', {
-    body: testo, icon: 'icona-192.png', badge: 'icona-192.png', tag: mattina ? 'diario-mattina' : 'diario-pomeriggio', renotify: true, data: { url: './#diary' }
+    body: testo, icon: 'icona-192.png', badge: 'icona-192.png', tag: 'diario-' + dataLocale() + (mattina ? '-mattina' : '-pomeriggio'), renotify: true, data: { url: './#diary' }
   }));
 });
 
