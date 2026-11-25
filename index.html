@@ -1452,6 +1452,7 @@ document.getElementById("btnMenu").onclick=function(){
     '<button class="tbtn" id="m_prom">◔ Promemoria</button>'+
     '<button class="tbtn" id="m_help">? Come si usa</button>'+
     (document.getElementById("btnPrint").hidden?'':'<button class="tbtn" id="m_pdf">⎙ Crea il PDF di questa sezione</button>')+
+    '<button class="tbtn" id="m_per">⎙ PDF di un periodo</button>'+
     '<div class="field" style="margin:6px 0 0"><div class="lab">Aspetto</div><div class="themeseg" id="themeSeg">'+
       '<button type="button" data-th="auto">Automatico</button><button type="button" data-th="light">Chiaro</button><button type="button" data-th="dark">Scuro</button></div></div>'+
     '<button class="tbtn" data-close>Chiudi</button></div>'+
@@ -1463,6 +1464,7 @@ document.getElementById("btnMenu").onclick=function(){
   document.getElementById("m_help").onclick=showHelp;
   var mpdf=document.getElementById("m_pdf");
   if(mpdf)mpdf.onclick=function(){closeModal();setTimeout(function(){document.getElementById("btnPrint").click();},0);};
+  document.getElementById("m_per").onclick=openPeriodo;
   syncThemeSeg();
   document.querySelectorAll("#themeSeg [data-th]").forEach(function(b){b.onclick=function(){setTheme(b.dataset.th);};});
 };
@@ -1484,6 +1486,7 @@ function showHelp(){
   '<li>In <b>Menu → Il mio andamento</b> vedi i grafici delle settimane, apri quelle passate e scegli per quanto tempo tenerle su questo dispositivo. I numeri restano sempre.</li>'+
   '<li>Nella Pianificazione, in <b>Com’è andata la volta scorsa?</b>, ritrovi la pianificazione della settimana prima.</li></ul>'+
   '<h4>Prima della seduta o del gruppo</h4><ul><li><b>PDF</b> (su telefono in <b>Menu → Crea il PDF di questa sezione</b>, su computer in alto): crea il foglio della sezione che hai aperta, da stampare o salvare in PDF. Su iPhone, nella finestra di stampa allarga l’anteprima con due dita, poi <b>Condividi</b> e <b>Salva su File</b>. Se il foglio esce in verticale, imposta <b>Orizzontale</b>.</li>'+
+  '<li><b>PDF di un periodo</b> (Menu o Il mio andamento): mette in un solo PDF le schede di più settimane, per esempio dell’ultimo mese.</li>'+
   '<li><b>Menu → Esporta o carica i dati → Invia i dati</b>: crea un solo file con tutto (diary card, crisi, pianificazione, check-in, cassetta e settimane passate) da mandare al tutor. Fallo <b>ogni settimana, prima di «Nuova settimana»</b>.</li></ul>'+
   '<h4>Più dispositivi</h4><ul><li>Ogni dispositivo ha i suoi dati. Sul dispositivo dove hai compilato apri <b>Menu → Esporta o carica i dati → Invia i dati</b>, poi sull’altro <b>Carica i dati</b> e scegli quel file. Le schede vengono unite: per ogni casella resta la risposta più recente.</li>'+
   '<li>In alternativa puoi copiare un <b>codice</b> e incollarlo sull’altro dispositivo (per esempio mandandolo a te stessa su WhatsApp).</li>'+
@@ -1798,7 +1801,7 @@ function renderStoria(id){
   if(!L.length)h+='<div class="empty">Non ci sono ancora settimane da mostrare. Quando compili la diary card o una Scheda Crisi, qui vedi i numeri della settimana.</div>';
   else h+=chartCrisi(L)+chartInt(L)+chartCond(L)+chartEmo(L);
   var past=S.storia.filter(function(x){return x.id!==S.wk;}).sort(byStart).reverse();
-  h+='<div class="lhead"><h2>Le settimane passate</h2></div>';
+  h+='<div class="lhead"><h2>Le settimane passate</h2><button type="button" class="tbtn" data-periodo>⎙ PDF di un periodo</button></div>';
   if(!past.length)h+='<div class="empty">Nessuna settimana chiusa. Quando tocchi <b>Menu → Nuova settimana</b>, la diary card, le crisi e la pianificazione finiscono qui e puoi rileggerle.</div>';
   past.forEach(function(x){
     var a=findA(x.id), n=x.n||{CA:0,CE:0,CS:0};
@@ -1884,6 +1887,7 @@ document.addEventListener("click",function(ev){
   /* Sul telefono il tocco apre e chiude il fumetto; con il mouse è già aperto dal passaggio e il clic lo lascia */
   if(b){var on=b.classList.contains("tipon");hideTips();if(!on||canHover())showTip(b);return;}
   hideTips();
+  if(ev.target.closest("[data-periodo]")){openPeriodo();return;}
   if((b=ev.target.closest("[data-range]"))){range=b.dataset.range;try{localStorage.setItem(RK,range);}catch(e){}renderStoria();return;}
   if((b=ev.target.closest("[data-keep]"))){
     var m=+b.dataset.keep, n=pruneArch(m,true);
@@ -1949,8 +1953,76 @@ function countText(list){
 }
 /* In una settimana passata il PDF ha tutti e tre i fogli di quella settimana */
 function weekPrint(){return withWeek(cur.w,function(){return DiaryCard.buildPrint(colorPrint)+buildPrint()+buildPian();});}
-function printHTML(){if(curView==="storia")return cur.w?weekPrint():"";return curView==="diary"?DiaryCard.buildPrint(colorPrint):curView==="pian"?buildPian():(curView==="check"?buildCheck():(curView==="cassetta"?buildCassa():buildPrint()));}
-function openPrint(){
+/* PDF di un periodo: più settimane in un solo PDF. printFn (e printNameFn) restano finché l’anteprima è aperta: il selettore dei colori e la stampa rigenerano l’HTML da lì */
+var printFn=null,printNameFn=null;
+var perSt={p:"1m",dal:"",al:"",dc:true,cr:true,pi:true,cur:true};
+function periodoSel(st,today){
+  var cut="", all=st.p==="all", dates=st.p==="dates";
+  if(!all&&!dates){var c=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+    if(st.p==="2w")c.setDate(c.getDate()-14);else if(st.p==="1m")c.setMonth(c.getMonth()-1);else c.setMonth(c.getMonth()-3);
+    cut=fmtISO(c);}
+  function ok(w){
+    if(all)return true;
+    if(!parseD(w.inizio))return false;
+    if(dates)return (!st.dal||w.inizio>=st.dal)&&(!st.al||w.inizio<=st.al);
+    return w.inizio>=cut;
+  }
+  var out=archLive().filter(function(a){return a.id!==S.wk&&ok(a);}).map(function(a){return {W:a,cur:false};});
+  if(st.cur&&wkHas(S)&&ok(S))out.push({W:S,cur:true});
+  return out;
+}
+function periodoHTML(sel,st){
+  return sel.map(function(x){
+    function f(){return (st.dc?DiaryCard.buildPrint(colorPrint):"")+(st.cr?buildPrint():"")+(st.pi?buildPian():"");}
+    return x.cur?f():withWeek(x.W,f);
+  }).join("");
+}
+function periodoInfo(sel){
+  if(!sel.length)return "";
+  function dm(d){return d.getDate()+"/"+(d.getMonth()+1);}
+  var a=parseD(sel[0].W.inizio),z=parseD(sel[sel.length-1].W.inizio),t=sel.length+(sel.length===1?" settimana":" settimane");
+  if(!a||!z)return t;
+  var e=new Date(z);e.setDate(z.getDate()+6);
+  return t+", dal "+dm(a)+" al "+dm(e);
+}
+function openPeriodo(){
+  var st=perSt;
+  var P=[["2w","Ultime 2 settimane"],["1m","Ultimo mese"],["3m","Ultimi 3 mesi"],["all","Tutto"],["dates","Scegli le date"]];
+  function chk(k,l){return '<label style="display:flex;align-items:center;gap:10px;min-height:44px"><input type="checkbox" data-pk="'+k+'"'+(st[k]?' checked':'')+' style="width:22px;height:22px"> '+l+'</label>';}
+  openModal('<h2>PDF di un periodo</h2><p style="margin-top:0;color:var(--muted);font-size:14px">Metti in un solo PDF le schede di più settimane.</p>'+
+    '<div class="themeseg" role="group" aria-label="Periodo" id="per_seg" style="flex-wrap:wrap">'+P.map(function(r){return '<button type="button" data-pp="'+r[0]+'" aria-pressed="'+(st.p===r[0])+'">'+r[1]+'</button>';}).join("")+'</div>'+
+    '<div id="per_dates" style="display:'+(st.p==="dates"?'flex':'none')+';gap:10px;margin-top:10px;flex-wrap:wrap">'+
+      '<div class="field" style="flex:1;min-width:140px;margin:0"><label for="per_dal">Dal</label><input type="date" id="per_dal" value="'+esc(st.dal)+'"></div>'+
+      '<div class="field" style="flex:1;min-width:140px;margin:0"><label for="per_al">Al</label><input type="date" id="per_al" value="'+esc(st.al)+'"></div></div>'+
+    '<p class="fh" style="margin:8px 0 12px;font-size:13px;color:var(--muted)">Ci sono le settimane ancora tenute su questo dispositivo (le scegli in Il mio andamento).</p>'+
+    '<div class="lab">Quali fogli</div>'+chk("dc","Diary card")+chk("cr","Scheda Crisi")+chk("pi","Pianificazione")+
+    '<div class="lab" style="margin-top:6px">Settimana in corso</div>'+chk("cur","Includi la settimana in corso")+
+    '<p id="per_info" role="status" style="margin:10px 0;font-weight:600"></p>'+
+    '<div class="acts"><button class="tbtn primary" id="per_go">Anteprima</button><button class="tbtn" data-close>Chiudi</button></div>');
+  function upd(){
+    var sel=periodoSel(st,new Date()),info=document.getElementById("per_info"),go=document.getElementById("per_go");
+    var noSheet=!(st.dc||st.cr||st.pi);
+    info.textContent=sel.length?periodoInfo(sel):"Nessuna settimana in questo periodo.";
+    if(sel.length&&noSheet)info.textContent+=" · Spunta almeno un foglio.";
+    go.disabled=!sel.length||noSheet;
+  }
+  sheet.querySelectorAll("[data-pp]").forEach(function(b){b.onclick=function(){
+    st.p=b.dataset.pp;
+    sheet.querySelectorAll("[data-pp]").forEach(function(x){x.setAttribute("aria-pressed",String(x===b));});
+    document.getElementById("per_dates").style.display=st.p==="dates"?"flex":"none";upd();};});
+  document.getElementById("per_dal").onchange=function(){st.dal=this.value;upd();};
+  document.getElementById("per_al").onchange=function(){st.al=this.value;upd();};
+  sheet.querySelectorAll("[data-pk]").forEach(function(c){c.onchange=function(){st[c.dataset.pk]=c.checked;upd();};});
+  document.getElementById("per_go").onclick=function(){
+    var sel=periodoSel(st,new Date()); if(!sel.length)return;
+    var snap={dc:st.dc,cr:st.cr,pi:st.pi},a=sel[0].W.inizio||"senza-data",z=sel[sel.length-1].W.inizio||"senza-data";
+    openPrint(function(){return periodoHTML(sel,snap);},function(){var d=new Date();return "diario-get-periodo-"+a+"-"+z+"-"+String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0")+".pdf";});
+  };
+  upd();
+}
+function printHTML(){if(printFn)return printFn();if(curView==="storia")return cur.w?weekPrint():"";return curView==="diary"?DiaryCard.buildPrint(colorPrint):curView==="pian"?buildPian():(curView==="check"?buildCheck():(curView==="cassetta"?buildCassa():buildPrint()));}
+function openPrint(fn,nameFn){
+  if(typeof fn==="function"){printFn=fn;printNameFn=typeof nameFn==="function"?nameFn:null;}else{printFn=null;printNameFn=null;}
   dropEmpty();
   var html=printHTML();
   document.getElementById("print").innerHTML=html;
@@ -1963,7 +2035,8 @@ function openPrint(){
     if(isIosApp()){savePdf(html);return;}
     closeModal();setTimeout(function(){window.print();},250);
   };
-  sheet.querySelectorAll("[data-pc]").forEach(function(b){b.onclick=function(){colorPrint=b.dataset.pc==="1";try{localStorage.setItem(PK,colorPrint?"1":"0");}catch(e){}openPrint();};});
+  sheet.querySelectorAll("[data-pc]").forEach(function(b){b.onclick=function(){colorPrint=b.dataset.pc==="1";try{localStorage.setItem(PK,colorPrint?"1":"0");}catch(e){}openPrint(printFn,printNameFn);};});
+  var cl=sheet.querySelector(".acts [data-close]");if(cl)cl.addEventListener("click",function(){printFn=null;printNameFn=null;});
 }
 /* iPhone con l'app sulla schermata Home: window.print() non fa nulla, quindi si crea un PDF (librerie caricate solo al bisogno) e lo si passa al menu Condividi */
 function isIosApp(){
@@ -1976,7 +2049,7 @@ function loadPdfLibs(){
   if(window.html2canvas&&window.jspdf)return Promise.resolve();
   return loadScript("vendor/html2canvas.min.js").then(function(){return loadScript("vendor/jspdf.umd.min.js");});
 }
-function pdfName(){var d=new Date(),v=curView==="storia"&&cur.w?"storia-"+(cur.w.id||""):curView;return "diario-get-"+String(v).replace(/[^\w-]+/g,"-")+"-"+fmtISO(d)+"-"+String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0")+".pdf";}
+function pdfName(){if(printNameFn)return printNameFn();var d=new Date(),v=curView==="storia"&&cur.w?"storia-"+(cur.w.id||""):curView;return "diario-get-"+String(v).replace(/[^\w-]+/g,"-")+"-"+fmtISO(d)+"-"+String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0")+".pdf";}
 /* Ogni .page diventa un'immagine (foglio A4 a grandezza reale, scala 2) e una pagina A4 orizzontale con margine di 8 mm, come la stampa vera */
 function makePdf(html){
   var box=document.createElement("div");box.id="pdfBox";box.innerHTML=html;document.body.appendChild(box);
@@ -2036,8 +2109,9 @@ function fitPreview(){
     pg.parentNode.insertBefore(holder,pg);holder.appendChild(pg);pg.style.transform="scale("+k+")";
   });
 }
-document.getElementById("btnPrint").onclick=openPrint;
+document.getElementById("btnPrint").onclick=function(){openPrint();};
 window.addEventListener("beforeprint",function(){document.getElementById("print").innerHTML=printHTML();});
+window.addEventListener("afterprint",function(){printFn=null;printNameFn=null;});
 
 /* ---------- Pianificazione del weekend (libro GET, pag. 154-178) ---------- */
 var PDAYS=[["sab","Sabato"],["dom","Domenica"],["g3","Giorno a scelta"]];
